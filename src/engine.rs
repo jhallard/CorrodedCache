@@ -1,8 +1,6 @@
 /*
  * This file defines the core "engine" of the key/value store. It wraps around
- * the central data structure (a HashMap), and provides the primary interfaces:
- * - `get(key: String) -> Option<String>`
- * - `set(key: String, value: String) -> Option<String>`
+ * the central data structure (a HashMap), and provides the primary get/set interfaces
  */
 
 use std::collections::HashMap;
@@ -52,14 +50,26 @@ impl Engine {
 mod tests {
     use super::*;
 
+    fn i64_to_bytes(i: i64) -> Vec<u8> {
+        i.to_string().into_bytes()
+    }
+
+    fn bytes_to_i64(b: Vec<u8>) -> i64 {
+        String::from_utf8(b).unwrap().parse::<i64>().unwrap()
+    }
+
     #[test]
     fn test_set_and_get() {
         let mut engine = Engine::new();
         let key = "key".to_string();
         let value = vec![1, 2, 3, 4, 5];
 
-        engine.set(&key, value.clone());
+        assert_eq!(engine.set(&key, value.clone()), value.len());
         assert_eq!(engine.get(&key), Some(value));
+
+        let value = 1234;
+        assert_eq!(engine.set(&key, i64_to_bytes(value)), 4);
+        assert_eq!(bytes_to_i64(engine.get(&key).unwrap()), value);
     }
 
     #[test]
