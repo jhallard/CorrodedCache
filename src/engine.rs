@@ -10,6 +10,11 @@ pub struct Engine {
 }
 
 impl Engine {
+    /// Creates a new Engine object
+    /// TODO: potentially have this be a singleton since there should
+    /// only ever be one engine per process?
+    /// TODO: Add ability to specify the starting size of the map
+    /// TODO: Add ability to recover from a snapshot
     pub fn new() -> Engine {
         Engine {
             data: HashMap::new(),
@@ -44,19 +49,26 @@ impl Engine {
     pub fn get(&self, key: &str) -> Option<Vec<u8>> {
         self.data.get(key).cloned()
     }
+
+    /// Deletes the value for the key `key`.
+    /// If the key does not exist, `None` is returned.
+    ///
+    /// # Arguments:
+    /// - `key`: The key to get
+    ///
+    /// # Returns
+    /// The value for the given key, or `None` if the key does not exist
+    ///
+    pub fn delete(&mut self, key: &str) -> Option<Vec<u8>> {
+        self.data.remove(key)
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    // This is kinda bullshit.. just maybe move this to the top level
+    use super::super::utils::{bytes_to_i64, bytes_to_str, i64_to_bytes, str_to_bytes};
     use super::*;
-
-    fn i64_to_bytes(i: i64) -> Vec<u8> {
-        i.to_string().into_bytes()
-    }
-
-    fn bytes_to_i64(b: Vec<u8>) -> i64 {
-        String::from_utf8(b).unwrap().parse::<i64>().unwrap()
-    }
 
     #[test]
     fn test_set_and_get() {
@@ -70,6 +82,16 @@ mod tests {
         let value = 1234;
         assert_eq!(engine.set(&key, i64_to_bytes(value)), 4);
         assert_eq!(bytes_to_i64(engine.get(&key).unwrap()), value);
+    }
+
+    #[test]
+    fn test_delete() {
+        let mut engine = Engine::new();
+        let key = "key".to_string();
+        let value = str_to_bytes("value");
+
+        engine.set(&key, value.clone());
+        assert_eq!(bytes_to_str(engine.delete(&key).unwrap()), "value");
     }
 
     #[test]
